@@ -71,10 +71,10 @@ else:
 
 | Role | Owner | Owns |
 |---|---|---|
-| Rules + Backend | Person A | Calculation logic, API wrapper, CSV parsing stretch |
-| AI Agent | Person B (Thanu) | Guardrailed explanation prompt, Strands SDK → SageMaker deployment |
-| Frontend | Person C | Slider UI, results screen, certificate image, WhatsApp share |
-| Infra + Demo | Person D | Cognito, deployment, SNS, demo video, Builder Center blog post |
+| Rules + Backend | Rishan | Calculation logic, API wrapper, CSV parsing stretch |
+| AI Agent | Thanushree | Guardrailed explanation prompt, Strands SDK → SageMaker deployment |
+| Frontend | Akhil | Slider UI, results screen, certificate image, WhatsApp share |
+| Infra + Demo | Tanish | Cognito, deployment, SNS, demo video, Builder Center blog post |
 
 ## Getting Started
 
