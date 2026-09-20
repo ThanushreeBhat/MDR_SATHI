@@ -19,6 +19,11 @@ export const mockApi: MdrApi = {
       assessedAt: new Date().toISOString(),
       effectiveDate: "15 October 2026",
       isMock: true,
+      monthly_upi_receipts: request.monthlyUpiReceipts,
+      threshold: 100000,
+      affected_transactions: request.transactionsAbove2000,
+      total_mdr: 0,
+      transactions: [],
     };
   },
 
@@ -40,6 +45,11 @@ export const mockApi: MdrApi = {
       assessedAt: new Date().toISOString(),
       effectiveDate: "15 October 2026",
       isMock: true,
+      monthly_upi_receipts: 0,
+      threshold: 100000,
+      affected_transactions: 0,
+      total_mdr: 0,
+      transactions: [],
     };
   },
 };

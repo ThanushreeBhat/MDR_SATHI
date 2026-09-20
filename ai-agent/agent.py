@@ -24,8 +24,27 @@ STRICT RULES:
 def explain_mdr_result(rules_result, language="English"):
 
     status = rules_result["status"]
+    lang = language.lower() if isinstance(language, str) else "english"
 
     if status == "EXEMPT":
+
+        if lang in ("hindi", "hi"):
+            return (
+                f"आपकी मासिक यूपीआई प्राप्ति "
+                f"₹{rules_result['monthly_upi_receipts']:,} है। "
+                f"यह ₹{rules_result['threshold']:,} "
+                f"छूट सीमा के भीतर है। "
+                f"नियम इंजन के परिणाम के अनुसार, एमडीआर लागू नहीं होता है।"
+            )
+
+        if lang in ("kannada", "kn"):
+            return (
+                f"ನಿಮ್ಮ ಮಾಸಿಕ ಯುಪಿಐ ಸ್ವೀಕೃತಿ "
+                f"₹{rules_result['monthly_upi_receipts']:,} ಆಗಿದೆ. "
+                f"ಇದು ₹{rules_result['threshold']:,} "
+                f"ವಿನಾಯಿತಿ ಮಿತಿಯಲ್ಲಿದೆ. "
+                f"ನಿಯಮಗಳ ಎಂಜಿನ್ ಫಲಿತಾಂಶದ ಪ್ರಕಾರ, ಎಂಡಿಆರ್ (MDR) ಅನ್ವಯಿಸುವುದಿಲ್ಲ."
+            )
 
         return (
             f"Your monthly UPI receipts are "
@@ -36,6 +55,28 @@ def explain_mdr_result(rules_result, language="English"):
         )
 
     if status == "MDR_APPLIES":
+
+        if lang in ("hindi", "hi"):
+            return (
+                f"आपकी मासिक यूपीआई प्राप्ति "
+                f"₹{rules_result['monthly_upi_receipts']:,} है, "
+                f"जो ₹{rules_result['threshold']:,} सीमा से अधिक है। "
+                f"नियम इंजन ने "
+                f"{rules_result['affected_transactions']} प्रभावित लेन-देन की पहचान की है। "
+                f"गणना किया गया एमडीआर "
+                f"₹{rules_result['total_mdr']:.2f} है।"
+            )
+
+        if lang in ("kannada", "kn"):
+            return (
+                f"ನಿಮ್ಮ ಮಾಸಿಕ ಯುಪಿಐ ಸ್ವೀಕೃತಿ "
+                f"₹{rules_result['monthly_upi_receipts']:,} ಆಗಿದೆ, "
+                f"ಇದು ₹{rules_result['threshold']:,} ಮಿತಿಗಿಂತ ಹೆಚ್ಚಾಗಿದೆ. "
+                f"ನಿಯಮಗಳ ಎಂಜಿನ್ "
+                f"{rules_result['affected_transactions']} ಬಾಧಿತ ವಹಿವಾಟುಗಳನ್ನು ಗುರುತಿಸಿದೆ. "
+                f"ಲೆಕ್ಕಹಾಕಿದ ಎಂಡಿಆರ್ "
+                f"₹{rules_result['total_mdr']:.2f} ಆಗಿದೆ."
+            )
 
         return (
             f"Your monthly UPI receipts are "
@@ -48,6 +89,15 @@ def explain_mdr_result(rules_result, language="English"):
         )
 
     return "The rules engine returned an unknown status."
+
+
+def generate_explanations(rules_result):
+    return {
+        "en": explain_mdr_result(rules_result, language="English"),
+        "hi": explain_mdr_result(rules_result, language="Hindi"),
+        "kn": explain_mdr_result(rules_result, language="Kannada"),
+    }
+
 
 
 if __name__ == "__main__":
