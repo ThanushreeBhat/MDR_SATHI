@@ -1,0 +1,134 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: MDR Sathi Lambda backend
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 512
+
+  Api:
+    Auth:
+      DefaultAuthorizer: CognitoAuthorizer
+      Authorizers:
+        CognitoAuthorizer:
+          UserPoolArn: !GetAtt MDRSathiUserPool.Arn
+
+Parameters:
+  CognitoUserPoolName:
+    Type: String
+    Default: mdr-sathi-users
+
+  CognitoUserPoolClientName:
+    Type: String
+    Default: mdr-sathi-web-client
+
+Resources:
+
+  MDRSathiUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref CognitoUserPoolName
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  MDRSathiUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref MDRSathiUserPool
+      ClientName: !Ref CognitoUserPoolClientName
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  RawCsvBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  UpiCostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: mdr-sathi-rules-engine
+      CodeUri: .
+      Handler: aws.handler.lambda_handler
+      Environment:
+        Variables:
+          CALCULATION_TABLE_NAME: !Ref CalculationHistoryTable
+          RAW_CSV_BUCKET_NAME: !Ref RawCsvBucket
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt CalculationHistoryTable.Arn
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub "${RawCsvBucket.Arn}/*"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /calculate
+            Method: post
+
+  CalculationHistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MDRSathiCalculationHistory
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: calculation_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: calculation_id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: MDR-Sathi
+        - Key: Purpose
+          Value: CalculationHistory
+
+Outputs:
+
+  UpiCostApi:
+    Description: API Gateway endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/calculate"
+
+  CognitoUserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref MDRSathiUserPool
+
+  CognitoUserPoolClientId:
+    Description: Cognito App Client ID
+    Value: !Ref MDRSathiUserPoolClient
+
+  CognitoUserPoolArn:
+    Description: Cognito User Pool ARN
+    Value: !GetAtt MDRSathiUserPool.Arn
